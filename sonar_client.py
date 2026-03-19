@@ -7,8 +7,6 @@ def get_sonar_issues(sonar_url, sonar_token, project_key):
 
     params = {
         "componentKeys": project_key,
-        "resolved": "false",
-        "ps": 100
     }
 
     print("\n========== SONAR REQUEST ==========")
@@ -18,12 +16,16 @@ def get_sonar_issues(sonar_url, sonar_token, project_key):
     req = requests.Request("GET", url, params=params).prepare()
     print("Full API URL:", req.url)
 
-    response = requests.get(
-        url,
-        auth=(sonar_token, ""),
-        params=params,
-        timeout=30
-    )
+    try:
+        response = requests.get(
+            url,
+            auth=(sonar_token, ""),
+            params=params,
+            timeout=30
+        )
+    except Exception as e:
+        print("❌ Request failed:", e)
+        return []
 
     print("\n========== SONAR RESPONSE ==========")
     print("Status Code:", response.status_code)
@@ -41,4 +43,8 @@ def get_sonar_issues(sonar_url, sonar_token, project_key):
     print("Total Issues in Project:", total)
     print("Issues returned in this page:", len(issues))
 
+   
+
     return issues
+
+

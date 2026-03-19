@@ -12,9 +12,7 @@ SONAR_URL = os.getenv("SONAR_URL")
 SONAR_PROJECT_KEY = os.getenv("SONAR_PROJECT_KEY")
 SONAR_ORG = os.getenv("SONAR_ORG")
 SONAR_BRANCH = os.getenv("SONAR_BRANCH")
-
 REPO_ROOT = "C:/Users/Compro/Projects/work/c1-2023"
-
 
 def read_code_snippet(file_path):
     try:
@@ -34,12 +32,13 @@ def run_agent():
     secrets = get_secret()
 
     OPENAI_KEY = secrets.get("OPENAI_API_KEY")
-    SONAR_API_KEY = secrets.get("SONAR_API_KEY")
+    SONAR_TOKEN = secrets.get("SONAR_API_KEY")
 
+# ba4de1eea1444685a12bf199374bf57c712321ef
     # Fetch sonar issues
     issues = get_sonar_issues(
         SONAR_URL,
-        SONAR_API_KEY,
+        "ba4de1eea1444685a12bf199374bf57c712321ef",
         SONAR_PROJECT_KEY,
     )
 
@@ -79,10 +78,16 @@ def run_agent():
 
         print("🚀 Sending code to OpenAI...")
 
-        fixed_code = generate_fix(OPENAI_KEY, issue, code)
+        # fixed_code = generate_fix(OPENAI_KEY, issue, code)
+        fixed_code = "commented"
 
+        if fixed_code == "commented":
+            print("\n🛑 AGENT BLOCKED -commented")
+            print("Stopping further processing.")
+            break
         if fixed_code == "QUOTA_EXCEEDED":
             print("\n🛑 AGENT BLOCKED - OPENAI TOKEN LIMIT REACHED")
+            print("Stopping further processing.")
             break
 
         if not fixed_code:
