@@ -1,0 +1,114 @@
+
+Issue Key: AZtzExrEu_aSOxyPHzoV
+Message: Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed.
+File: C:\Users\Compro\Projects\work\c1-2023\apps\onboarding\plugins\0.gigya-plugin.client.ts
+
+---------------- CODE ----------------
+      count: userLoginObj.count + 1
+    };
+  } else {
+    updatedUserLoginObj = {
+      count: 1
+    };
+  }
+  localStorage.setItem(key, JSON.stringify(updatedUserLoginObj));
+}
+
+async function onLogin(userData: any) {
+  if (location.pathname.startsWith('/child-registration')) {
+    return;
+  }
+
+  const route = useRoute();
+
+  // if the query param u is present, redirect to desktop login page
+  if (route.query.u || route.query.desktop) {
+    localStorage.setItem('desktop-login', 'true');
+    navigateTo({ path: '/desktop-login', query: { u: route.query.u } });
+    return;
+  }
+
+  const { activateTheme, calculateAppTheme } = useThemeService();
+  const { getJWT } = useGigyaSession();
+  const { navigateToDashboardApp } = useInterAppNavigationService();
+  const {
+    getInviteDetails,
+    setInviteDetails,
+    getInviteParams,
+    setUserSpaceCount,
+    handleLogIn
+  } = useInvitationService();
+  const { setParentConsentGranted } = useOnboardingAuth();
+  const {
+    getLtiProcessingLogin,
+    getLtiPassPortSessionCreated,
+    setLtiPassPortSessionCreated
+  } = useLTISession();
+  const { generateLoginEvent, logEvents } = useUserTracker();
+
+  if (getLtiProcessingLogin() || getLtiPassPortSessionCreated()) {
+    if (getLtiPassPortSessionCreated()) {
+      setLtiPassPortSessionCreated(false);
+    }
+    return;
+  }
+
+  const gigyaUserData = await useGigyaSession().getGigyaUserData();
+  setSSOIntegrationProviderName(gigyaUserData);
+
+  //set login provider for all integrations(edulog, pes, unoi, ciip etc) in case user has registered from any integration
+  const provider = loginProvider?.value;
+  const isSSOProvider =
+    provider && (provider.startsWith('saml-') || provider.startsWith('oidc-'));
+
+  if (!userData.provider || isSSOProvider) {
+    userData.provider = provider || null;
+  }
+  //if user email belongs to @cambridge.org
+  //change implementation if need be
+  if (
+    userData.profile.email &&
+    userData.profile.email.indexOf('@cambridge.org') != -1
+  ) {
+    const samlData = await handleSAMLUsers(userData);
+    //missing samlData means user doesn't have the required permissions, and got redirected to the error page
+    if (!samlData && typeof samlData === 'boolean') {
+      return;
+    }
+
+    userData.samlData = samlData;
+  }
+  useState('processingLogin').value = true;
+  const isUserPasswordResetted = useState('is-user-password-resetted');
+  if (isUserPasswordResetted) {
+    const passwordResetSuccessfulKey =
+      useLocalStorage().passwordResetSuccessful + userData.ext_user_id;
+    localStorage.setItem(passwordResetSuccessfulKey, 'true');
+    useState('is-user-password-resetted').value = true;
+  }
+  const jwt = await getJWT();
+  const inviteDetails = getInviteDetails();
+  const inviteParams = getInviteParams();
+  const body = {
+    UID: userData.UID,
+    profile: userData.profile,
+    c1UserRole: getC1UserRole(userData),
+    provider: userData.provider,
+    samlData: userData.samlData,
+    isSpaceCountNeeded: !inviteDetails.userId,
+    orgId: inviteParams.orgId,
+    jwtToVerify: jwt,
+    theme: useRuntimeConfig().public.themeTypes.adult.code
+  };
+  const theme = calculateAppTheme(body.c1UserRole);
+  activateTheme(theme);
+  body.theme = theme;
+
+  $fetch('/apigateway/login', {
+    method: 'POST',
+    body: body
+  }).then(async (res: any) => {
+    if (res?.user?.role === 'student') {
+      try {
+
+--------------------------------------

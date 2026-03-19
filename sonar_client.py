@@ -7,6 +7,9 @@ def get_sonar_issues(sonar_url, sonar_token, project_key):
 
     params = {
         "componentKeys": project_key,
+        "rules": "squid:S3776",
+        "types": "CODE_SMELL",
+        "ps": 10
     }
 
     print("\n========== SONAR REQUEST ==========")
@@ -40,11 +43,7 @@ def get_sonar_issues(sonar_url, sonar_token, project_key):
     total = data.get("total", 0)
     issues = data.get("issues", [])
 
-    print("Total Issues in Project:", total)
-    print("Issues returned in this page:", len(issues))
-
-   
+    print("Total Cognitive Complexity Issues:", total)
+    print("Issues returned:", len(issues))
 
     return issues
-
-

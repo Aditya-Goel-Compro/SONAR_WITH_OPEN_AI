@@ -26,7 +26,7 @@ Return ONLY the corrected code.
     try:
 
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="codex-1.3",
             messages=[
                 {"role": "system", "content": "You fix SonarQube issues."},
                 {"role": "user", "content": prompt}
