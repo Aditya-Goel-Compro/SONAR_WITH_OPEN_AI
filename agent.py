@@ -34,11 +34,10 @@ def run_agent():
     OPENAI_KEY = secrets.get("OPENAI_API_KEY")
     SONAR_TOKEN = secrets.get("SONAR_API_KEY")
 
-# ba4de1eea1444685a12bf199374bf57c712321ef
     # Fetch sonar issues
     issues = get_sonar_issues(
         SONAR_URL,
-        "ba4de1eea1444685a12bf199374bf57c712321ef",
+        "",
         SONAR_PROJECT_KEY,
     )
 
@@ -47,14 +46,7 @@ def run_agent():
     if not issues:
         print("\n⚠ No Sonar issues found. Running demo issue instead.")
 
-        issues = [
-            {
-                "key": "DEMO-1",
-                "rule": "Avoid console.log",
-                "message": "Remove console.log from production code",
-                "component": "demo_project/app.js"
-            }
-        ]
+        return
 
     for issue in issues:
 
