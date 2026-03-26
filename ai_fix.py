@@ -1,4 +1,5 @@
 from openai import OpenAI
+import json
 
 
 def generate_fix(api_key, issue, code):
@@ -10,47 +11,53 @@ def generate_fix(api_key, issue, code):
     print("Rule:", issue.get("rule"))
 
     prompt = f"""
-You are a senior JavaScript engineer fixing a SonarQube issue.
+You are a senior TypeScript engineer.
 
-Rule: {issue.get("rule")}
-Description: {issue.get("message")}
+Fix ONLY the issue using best practices.
 
-Only fix the problematic line.
+STRICT RULES:
+- Modify ONLY the problematic line
+- Do NOT refactor whole code
+- Do NOT add explanation
+
+Return STRICT JSON:
+{{
+    "fixed_code": "<code>"
+}}
 
 Code:
 {code}
-
-Return ONLY the corrected code.
 """
 
     try:
-
         response = client.chat.completions.create(
-            model="codex-1.3",
+            model="gpt-4.1-mini",
             messages=[
-                {"role": "system", "content": "You fix SonarQube issues."},
+                {"role": "system", "content": "Expert TypeScript Sonar fixer"},
                 {"role": "user", "content": prompt}
-            ]
+            ],
+            max_tokens=800,
+            temperature=0
         )
 
-        return response.choices[0].message.content
+        content = response.choices[0].message.content.strip()
+
+        try:
+            parsed = json.loads(content)
+            return parsed  # ✅ always return dict
+        except:
+            print("⚠ Invalid JSON, wrapping manually")
+            return {"fixed_code": content}
 
     except Exception as e:
 
         error_msg = str(e)
 
         print("\n❌ OPENAI ERROR")
-        print("Issue:", issue.get("key"))
 
-        # Detect quota exceeded
-        if "insufficient_quota" in error_msg:
-            print("🚨 OpenAI quota exhausted")
+        if "insufficient_quota" in error_msg or "429" in error_msg:
+            print("🚨 Quota/Rate limit hit")
             return "QUOTA_EXCEEDED"
 
-        elif "429" in error_msg:
-            print("🚨 Rate limit reached")
-            return "QUOTA_EXCEEDED"
-
-        else:
-            print("Error:", error_msg)
-            return None
+        print("Error:", error_msg)
+        return None

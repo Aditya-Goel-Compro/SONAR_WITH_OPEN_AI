@@ -9,7 +9,7 @@ def get_sonar_issues(sonar_url, sonar_token, project_key):
         "componentKeys": project_key,
         "rules": "squid:S3776",
         "types": "CODE_SMELL",
-        "ps": 10
+        "ps": 1
     }
 
     print("\n========== SONAR REQUEST ==========")

@@ -1,0 +1,29 @@
+
+Issue Key: AZ0j0FTjZNgEAAhlKnzl
+Message: Prefer `globalThis` over `window`.
+File: C:\Users\Compro\Projects\work\c1-2023\apps\onboarding\pages\lti-onboarding.vue
+
+---------------- CODE ----------------
+      privacyLink.focus();
+    }
+  }
+};
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style lang="scss" scoped>
+@import '../assets/scss/helper.scss';
+
+.lti-onboarding-journey-container {
+  &.pop-up-warning-wrapper {
+    margin-top: 150px;
+    @include media-breakpoint-up(lg) {
+      position: relative;
+      top: 35%;
+      transform: translateY(-10%);
+      margin-top: 0px;
+    }
+  }
+  .lti-onboarding-container {
+
+--------------------------------------

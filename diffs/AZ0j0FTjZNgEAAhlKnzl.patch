@@ -1,0 +1,25 @@
+--- a/apps/onboarding/pages/lti-onboarding.vue
++++ b/apps/onboarding/pages/lti-onboarding.vue
+@@ -1,21 +1 @@
+-privacyLink?.focus();        left: 0;
+-      }
+-    }
+-  }
+-
+-  .loader-wrapper {
+-    left: 50%;
+-    top: 50%;
+-    position: absolute;
+-    transform: translate(-50%, -50%);
+-
+-    .loader {
+-      border: 12px solid #f3f3f3;
+-      border-top: 12px solid #ababab;
+-      border-radius: 50%;
+-      width: 100px !important;
+-      height: 100px;
+-      animation: spin 1s linear infinite;
+-    }
+-  }
+-}
++privacyLink?.focus();
