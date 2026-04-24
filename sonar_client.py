@@ -1,23 +1,64 @@
 import requests
+from urllib.parse import urlencode
 
 
+# ===============================
+# ⚙️ CONFIG (EDIT ONLY THIS)
+# ===============================
+MAX_ISSUES = 1  # 🔥 how many issues to FIX
+
+FETCH_PARAMS = {
+    "impactSeverities": "HIGH",              # LOW / MEDIUM / HIGH
+    "impactSoftwareQualities": "RELIABILITY",  # RELIABILITY / MAINTAINABILITY / SECURITY
+    "issueStatuses": "OPEN",               # OPEN / CONFIRMED / etc
+    "types": "CODE_SMELL",                # CODE_SMELL / BUG / VULNERABILITY
+}
+
+# 👉 OPTIONAL: allow only specific rules (leave empty for all)
+ALLOWED_RULES = [
+    # "typescript:S1125",
+    # "typescript:S1481",
+]
+
+# 👉 ALWAYS BLOCK THESE
+BLOCKED_RULES = [
+    "typescript:S3776",
+    "javascript:S3776"
+]
+
+
+# ===============================
+# 🧠 Rule Filter
+# ===============================
+def is_safe_issue(issue):
+    rule = issue.get("rule", "")
+
+    if rule in BLOCKED_RULES:
+        return False
+
+    if ALLOWED_RULES:
+        return rule in ALLOWED_RULES
+
+    return True
+
+
+# ===============================
+# 🚀 Fetch Sonar Issues
+# ===============================
 def get_sonar_issues(sonar_url, sonar_token, project_key):
 
     url = f"{sonar_url}/api/issues/search"
 
+    print("\n========== SONAR REQUEST ==========")
+
     params = {
         "componentKeys": project_key,
-        "rules": "squid:S3776",
-        "types": "CODE_SMELL",
-        "ps": 1
+        "ps": 50,   # fetch more, filter later
+        "p": 1,
+        **FETCH_PARAMS
     }
 
-    print("\n========== SONAR REQUEST ==========")
-    print("Base URL:", url)
-    print("Params:", params)
-
-    req = requests.Request("GET", url, params=params).prepare()
-    print("Full API URL:", req.url)
+    print("🌐 URL:", f"{url}?{urlencode(params)}")
 
     try:
         response = requests.get(
@@ -30,20 +71,35 @@ def get_sonar_issues(sonar_url, sonar_token, project_key):
         print("❌ Request failed:", e)
         return []
 
-    print("\n========== SONAR RESPONSE ==========")
-    print("Status Code:", response.status_code)
-
     if response.status_code != 200:
         print("❌ Sonar API error")
         print(response.text)
         return []
 
     data = response.json()
-
-    total = data.get("total", 0)
     issues = data.get("issues", [])
 
-    print("Total Cognitive Complexity Issues:", total)
-    print("Issues returned:", len(issues))
+    print(f"📦 Total fetched: {len(issues)}")
 
-    return issues
+    # ===============================
+    # 🎯 Select only required issues
+    # ===============================
+    selected_issues = []
+
+    for issue in issues:
+
+        if not is_safe_issue(issue):
+            print(f"⛔ Skipped rule: {issue.get('rule')}")
+            continue
+
+        selected_issues.append(issue)
+
+        if len(selected_issues) >= MAX_ISSUES:
+            break
+
+    print(f"\n✅ Selected Issues: {len(selected_issues)}")
+
+    if not selected_issues:
+        print("⚠ No matching issues found")
+
+    return selected_issues

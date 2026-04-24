@@ -5,22 +5,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-REPO_PATH = r"C:/Users/Compro/Projects/work/c1-2023"
-BRANCH_NAME = "sonarFix"
+REPO_PATH = r"C:/Users/Compro/Projects/work/Sonar_Auto_Fix/c1-2023"
+
+BRANCH_NAME = "sonar_Fix_Auto"
 BASE_BRANCH = "env/thor"
+SOURCE_BRANCH = "master"
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-REPO_NAME = "comprodls/c1-2023"   # ⚠️ verify this
+REPO_NAME = "comprodls/c1-2023"
 
 
 # ===============================
-# 🔧 Run Git Commands (Husky Disabled)
+# 🔧 Run Commands
 # ===============================
-def run_cmd(cmd):
+def run_cmd(cmd, use_husky=False):
     print(f"\n👉 {cmd}")
 
     env = os.environ.copy()
-    env["HUSKY"] = "0"   # 🔥 DISABLE HUSKY
+
+    # Disable husky ONLY for git commands
+    if not use_husky:
+        env["HUSKY"] = "0"
 
     result = subprocess.run(cmd, shell=True, cwd=REPO_PATH, env=env)
 
@@ -28,38 +33,45 @@ def run_cmd(cmd):
         print("❌ Command failed:", cmd)
         exit(1)
 
-
 # ===============================
 # 🌿 Branch Setup
 # ===============================
 def prepare_branch():
-    print("\n🌿 Preparing branch...")
+    print("\n🌿 Preparing branch from master...")
+
+    run_cmd("git fetch origin")
+    run_cmd(f"git checkout {SOURCE_BRANCH}")
+    run_cmd(f"git pull origin {SOURCE_BRANCH}")
+
+    # Create fresh branch from master
     run_cmd(f"git checkout -B {BRANCH_NAME}")
 
 
 # ===============================
-# 💾 Commit Changes (Skip Hooks)
+# 💾 Commit Changes
 # ===============================
 def commit_all_changes():
-    print("\n💾 Staging changes...")
 
+    print("\n📦 Staging changes...")
     run_cmd("git add -A")
+    run_cmd("git reset .husky/pre-commit")
 
     print("\n📝 Creating commit...")
-
     subprocess.run(
-        'git commit -m "🔧 Sonar auto fixes" --no-verify',  # 🔥 SKIP ESLINT
+        'git commit -m "🔧 Sonar auto fixes" --no-verify',
         shell=True,
         cwd=REPO_PATH
     )
 
 
 # ===============================
-# 🚀 Push Branch
+# 🚀 Push Branch (NO FORCE)
 # ===============================
 def push_branch():
     print("\n🚀 Pushing branch...")
-    run_cmd(f"git push origin {BRANCH_NAME} --force")
+
+    run_cmd(f"git push origin {BRANCH_NAME}")
+    # 👆 sets upstream automatically
 
 
 # ===============================
@@ -95,8 +107,6 @@ def create_pr():
     if not GITHUB_TOKEN:
         print("❌ GITHUB_TOKEN missing")
         return
-
-    print("Repo:", REPO_NAME)
 
     existing_pr = get_existing_pr()
     if existing_pr:

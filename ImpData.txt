@@ -1,0 +1,1 @@
+Link of the sonar issue : https://sonarcloud.io/api/issues/search?componentKeys=comprodls_c1-2023&rules=squid:S3776&types=CODE_SMELL
